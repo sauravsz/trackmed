@@ -92,7 +92,15 @@ CREATE TABLE IF NOT EXISTS stock_adjustments (
   notes TEXT,
   date DATE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);`;
+);
+
+-- 7. Row-Level Security (RLS)
+ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE medicines ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dose_schedules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE channel_configs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE restock_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE stock_adjustments ENABLE ROW LEVEL SECURITY;`;
 
 export default async function SettingsPage() {
   const settings = await getSettings();

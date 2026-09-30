@@ -109,3 +109,15 @@ CREATE TABLE IF NOT EXISTS stock_adjustments (
 );
 
 CREATE INDEX IF NOT EXISTS idx_stock_adjustments_med_id ON stock_adjustments(medicine_id);
+
+-- ============================================================================
+-- 7. Security: Enable Row Level Security (RLS) on all public tables
+-- ============================================================================
+-- Prevents unauthorized access to tables via Supabase public PostgREST API (anon key).
+-- Direct PostgreSQL connections (Next.js server backend) bypass RLS safely.
+ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE medicines ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dose_schedules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE channel_configs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE restock_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE stock_adjustments ENABLE ROW LEVEL SECURITY;

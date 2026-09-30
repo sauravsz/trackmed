@@ -247,6 +247,15 @@ export async function initDb() {
       try {
         await executeCommand(`ALTER TABLE settings ADD COLUMN IF NOT EXISTS has_seeded BOOLEAN DEFAULT false;`);
       } catch {}
+      // Enable Row Level Security (RLS) on all public tables to prevent unauthorized PostgREST API access
+      try {
+        await executeCommand(`ALTER TABLE settings ENABLE ROW LEVEL SECURITY;`);
+        await executeCommand(`ALTER TABLE medicines ENABLE ROW LEVEL SECURITY;`);
+        await executeCommand(`ALTER TABLE dose_schedules ENABLE ROW LEVEL SECURITY;`);
+        await executeCommand(`ALTER TABLE channel_configs ENABLE ROW LEVEL SECURITY;`);
+        await executeCommand(`ALTER TABLE restock_events ENABLE ROW LEVEL SECURITY;`);
+        await executeCommand(`ALTER TABLE stock_adjustments ENABLE ROW LEVEL SECURITY;`);
+      } catch {}
     } else if (sqlite) {
       await sqlite.execute(`
         CREATE TABLE IF NOT EXISTS settings (
