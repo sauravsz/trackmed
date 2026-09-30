@@ -10,10 +10,20 @@ export async function GET(request: Request) {
   try {
     const { settings, states } = await getAllCalculatedStates();
 
-    if (!settings.reminders_enabled) {
+    const telegramBotToken = settings.telegram_bot_token || process.env.TELEGRAM_BOT_TOKEN;
+    const telegramChatId = settings.telegram_chat_id || process.env.TELEGRAM_CHAT_ID;
+    const telegramConfigured = Boolean(telegramBotToken && telegramChatId);
+    const telegramEnabled = settings.telegram_enabled !== false && telegramConfigured;
+
+    const emailTo = settings.reminder_email || process.env.REMINDER_EMAIL;
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const emailConfigured = Boolean(emailTo && resendApiKey);
+    const emailEnabled = Boolean(settings.reminders_enabled && emailConfigured);
+
+    if (!telegramEnabled && !emailEnabled) {
       return NextResponse.json({
         success: true,
-        message: "Daily reminders are currently disabled in Settings.",
+        message: "No active notification channels (Telegram or Email) are enabled/configured.",
         alerts_count: 0,
       });
     }
@@ -31,10 +41,6 @@ export async function GET(request: Request) {
     } = {};
 
     // 1. Telegram Dispatch
-    const telegramBotToken = settings.telegram_bot_token || process.env.TELEGRAM_BOT_TOKEN;
-    const telegramChatId = settings.telegram_chat_id || process.env.TELEGRAM_CHAT_ID;
-    const telegramEnabled = settings.telegram_enabled !== false;
-
     if (telegramEnabled && telegramBotToken && telegramChatId) {
       const telegramRes = await sendTelegramDailyDigest(telegramBotToken, telegramChatId, states);
       results.telegram = {
@@ -47,17 +53,13 @@ export async function GET(request: Request) {
       results.telegram = {
         attempted: false,
         success: false,
-        error: !telegramEnabled
-          ? "Telegram notifications disabled in settings"
-          : "Telegram bot token or chat ID not configured",
+        error: !telegramConfigured
+          ? "Telegram bot token or chat ID not configured"
+          : "Telegram notifications disabled in settings",
       };
     }
-
     // 2. Email Dispatch (Resend)
-    const emailTo = settings.reminder_email || process.env.REMINDER_EMAIL;
-    const resendApiKey = process.env.RESEND_API_KEY;
-
-    if (emailTo && resendApiKey) {
+    if (emailEnabled && emailTo && resendApiKey) {
       const resend = new Resend(resendApiKey);
       const todayFormatted = format(new Date(), "dd MMMM yyyy");
 
